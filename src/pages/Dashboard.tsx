@@ -16,6 +16,15 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Fallback: wenn Auth-Init hängt, leite nach 4s zum Login
+    const timeout = setTimeout(() => {
+      if (loading) {
+        toast.error("Verbindungsproblem – leite zum Login um…");
+        navigate("/auth");
+        setLoading(false);
+      }
+    }, 4000);
+
     supabase.auth.getSession()
       .then(({ data: { session }, error }) => {
         if (error) {
@@ -45,8 +54,11 @@ export default function Dashboard() {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
+  }, [navigate, loading]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
