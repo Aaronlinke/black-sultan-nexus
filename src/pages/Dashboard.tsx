@@ -16,13 +16,27 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (!session?.user) {
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error("Auth error:", error);
+          toast.error("Connection issue. Redirecting to login...");
+          navigate("/auth");
+          setLoading(false);
+          return;
+        }
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (!session?.user) {
+          navigate("/auth");
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to get session:", error);
+        toast.error("Unable to connect. Please try again.");
         navigate("/auth");
-      }
-    });
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
