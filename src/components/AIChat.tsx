@@ -52,7 +52,7 @@ export default function AIChat() {
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask me anything... I can help with strategy, insights, or general questions."
+              placeholder="Ask about rewards optimization, affiliate strategies, or market insights..."
               className="min-h-[120px] bg-muted border-border resize-none"
               disabled={loading}
             />
@@ -91,9 +91,12 @@ export default function AIChat() {
         )}
 
         {!response && !loading && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Ask me anything to get started</p>
+          <div className="text-center py-8">
+            <Sparkles className="w-10 h-10 mx-auto mb-3 text-secondary/50" />
+            <p className="text-sm font-medium text-foreground mb-2">Elite AI Assistant Active</p>
+            <p className="text-xs text-muted-foreground">
+              Ask about growth strategies, reward optimization, or business insights
+            </p>
           </div>
         )}
       </CardContent>

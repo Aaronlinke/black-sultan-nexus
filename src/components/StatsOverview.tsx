@@ -53,7 +53,9 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-accent">{stats.points}</div>
-          <p className="text-xs text-muted-foreground mt-1">Lifetime rewards earned</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {stats.points >= 1000 ? "Elite member" : stats.points >= 500 ? "Premium tier" : "Growing strong"}
+          </p>
         </CardContent>
       </Card>
 
@@ -64,7 +66,9 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-info">{stats.referrals}</div>
-          <p className="text-xs text-muted-foreground mt-1">Active referral links</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {stats.referrals > 0 ? `${stats.referrals * 100} pts earned` : "Generate your first code"}
+          </p>
         </CardContent>
       </Card>
 
@@ -75,7 +79,9 @@ export default function StatsOverview({ userId }: StatsOverviewProps) {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-primary">{stats.rank}</div>
-          <p className="text-xs text-muted-foreground mt-1">Current achievement tier</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {stats.rank === "Gold" ? "Maximum tier unlocked" : stats.rank === "Silver" ? "500 pts to Gold" : "500 pts to Silver"}
+          </p>
         </CardContent>
       </Card>
     </div>

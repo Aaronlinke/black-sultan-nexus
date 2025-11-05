@@ -117,21 +117,21 @@ export default function RewardPanel({ userId }: RewardPanelProps) {
         </div>
 
         <div className="pt-4 border-t border-border">
-          <h4 className="text-sm font-medium text-foreground mb-3">Earn More Points</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
-              Refer friends (+100 points)
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
-              Complete daily tasks (+25 points)
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent"></div>
-              Engage with AI (+10 points)
-            </li>
-          </ul>
+          <h4 className="text-sm font-medium text-foreground mb-3">Rank Progression</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between p-2 rounded bg-muted/50">
+              <span className="text-muted-foreground">Bronze</span>
+              <span className="text-foreground font-medium">0 - 499 pts</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-muted/50">
+              <span className="text-muted-foreground">Silver</span>
+              <span className="text-foreground font-medium">500 - 999 pts</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-accent/20">
+              <span className="text-accent font-medium">Gold</span>
+              <span className="text-accent font-medium">1000+ pts</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

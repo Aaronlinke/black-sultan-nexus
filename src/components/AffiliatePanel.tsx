@@ -127,21 +127,19 @@ export default function AffiliatePanel({ userId }: AffiliatePanelProps) {
         )}
 
         <div className="pt-4 border-t border-border">
-          <h4 className="text-sm font-medium text-foreground mb-3">How It Works</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-info"></div>
-              Share your unique referral link
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-info"></div>
-              Earn 100 points per signup
-            </li>
-            <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-info"></div>
-              Track all referrals in real-time
-            </li>
-          </ul>
+          <h4 className="text-sm font-medium text-foreground mb-3">Rewards per Referral</h4>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-info/10 border border-info/20">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-info" />
+                <span className="text-sm font-medium text-foreground">Each Signup</span>
+              </div>
+              <span className="text-lg font-bold text-info">+100 pts</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Referrals are tracked automatically when users sign up using your link
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>
