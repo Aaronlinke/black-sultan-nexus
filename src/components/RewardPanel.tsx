@@ -1,75 +1,29 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Gift, Plus, TrendingUp } from "lucide-react";
+import { Gift, Plus, TrendingUp, Zap } from "lucide-react";
 
 interface RewardPanelProps {
   userId: string;
+  points: number;
+  onAddPoints: (amount: number) => void;
 }
 
-export default function RewardPanel({ userId }: RewardPanelProps) {
-  const [points, setPoints] = useState(0);
+export default function RewardPanel({ userId, points, onAddPoints }: RewardPanelProps) {
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchRewards();
+  const rank = points >= 1000 ? "Gold" : points >= 500 ? "Silver" : "Bronze";
+  const rankProgress = points >= 1000 ? 100 : points >= 500 ? ((points - 500) / 500) * 100 : (points / 500) * 100;
 
-    const channel = supabase
-      .channel("rewards-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "rewards",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          setPoints(payload.new.points);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
-  const fetchRewards = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("rewards")
-        .select("points")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) throw error;
-      setPoints(data?.points || 0);
-    } catch (error: any) {
-      console.error("Error fetching rewards:", error);
-    }
-  };
-
-  const addPoints = async (amount: number) => {
+  const addPoints = (amount: number) => {
     setLoading(true);
-    try {
-      const newPoints = points + amount;
-      const { error } = await supabase
-        .from("rewards")
-        .update({ points: newPoints })
-        .eq("user_id", userId);
-
-      if (error) throw error;
-      toast.success(`Added ${amount} points!`);
-      setPoints(newPoints);
-    } catch (error: any) {
-      toast.error("Failed to add points");
-      console.error(error);
-    } finally {
+    setTimeout(() => {
+      onAddPoints(amount);
+      toast.success(`+${amount} Points! 🎉`);
       setLoading(false);
-    }
+    }, 300);
   };
 
   return (
@@ -82,7 +36,7 @@ export default function RewardPanel({ userId }: RewardPanelProps) {
             </div>
             <div>
               <CardTitle className="text-foreground">Rewards Center</CardTitle>
-              <CardDescription>Manage your points and achievements</CardDescription>
+              <CardDescription>Punkte sammeln & Rang aufsteigen</CardDescription>
             </div>
           </div>
         </div>
@@ -97,39 +51,40 @@ export default function RewardPanel({ userId }: RewardPanelProps) {
           <p className="text-xs text-muted-foreground mt-1">Points</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            onClick={() => addPoints(10)}
-            disabled={loading}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            +10 Points
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{rank}</span>
+            <span>{rank === "Gold" ? "MAX" : rank === "Silver" ? "Gold" : "Silver"}</span>
+          </div>
+          <Progress value={rankProgress} className="h-3 bg-muted" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <Button onClick={() => addPoints(10)} disabled={loading} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Plus className="w-3 h-3 mr-1" />+10
           </Button>
-          <Button
-            onClick={() => addPoints(50)}
-            disabled={loading}
-            className="bg-accent hover:bg-accent/90 text-accent-foreground shadow-md"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            +50 Points
+          <Button onClick={() => addPoints(50)} disabled={loading} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Plus className="w-3 h-3 mr-1" />+50
+          </Button>
+          <Button onClick={() => addPoints(100)} disabled={loading} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Zap className="w-3 h-3 mr-1" />+100
           </Button>
         </div>
 
         <div className="pt-4 border-t border-border">
           <h4 className="text-sm font-medium text-foreground mb-3">Rank Progression</h4>
           <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between p-2 rounded bg-muted/50">
-              <span className="text-muted-foreground">Bronze</span>
-              <span className="text-foreground font-medium">0 - 499 pts</span>
+            <div className={`flex items-center justify-between p-2 rounded ${rank === "Bronze" ? "bg-accent/20 border border-accent/30" : "bg-muted/50"}`}>
+              <span className={rank === "Bronze" ? "text-accent font-medium" : "text-muted-foreground"}>🥉 Bronze</span>
+              <span className="text-foreground font-medium">0 - 499</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded bg-muted/50">
-              <span className="text-muted-foreground">Silver</span>
-              <span className="text-foreground font-medium">500 - 999 pts</span>
+            <div className={`flex items-center justify-between p-2 rounded ${rank === "Silver" ? "bg-info/20 border border-info/30" : "bg-muted/50"}`}>
+              <span className={rank === "Silver" ? "text-info font-medium" : "text-muted-foreground"}>🥈 Silver</span>
+              <span className="text-foreground font-medium">500 - 999</span>
             </div>
-            <div className="flex items-center justify-between p-2 rounded bg-accent/20">
-              <span className="text-accent font-medium">Gold</span>
-              <span className="text-accent font-medium">1000+ pts</span>
+            <div className={`flex items-center justify-between p-2 rounded ${rank === "Gold" ? "bg-primary/20 border border-primary/30" : "bg-muted/50"}`}>
+              <span className={rank === "Gold" ? "text-primary font-medium" : "text-muted-foreground"}>🥇 Gold</span>
+              <span className="text-foreground font-medium">1000+</span>
             </div>
           </div>
         </div>
