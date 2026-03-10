@@ -1,36 +1,62 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Sparkles, Send } from "lucide-react";
+import { Sparkles, Send, Bot, User } from "lucide-react";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const quickActions = [
+  { label: "📈 Strategie-Tipps", prompt: "Gib mir 3 konkrete Strategien um meine Affiliate-Einnahmen zu maximieren" },
+  { label: "🎯 Punkte optimieren", prompt: "Wie kann ich am schnellsten den Gold-Rang erreichen?" },
+  { label: "🔥 Growth Hacks", prompt: "Was sind die besten Growth-Hacking Methoden für mein Affiliate Business?" },
+];
 
 export default function AIChat() {
-  const [prompt, setPrompt] = useState("");
-  const [response, setResponse] = useState("");
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return;
+
+    const userMsg: Message = { role: "user", content: text.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
     setLoading(true);
-    setResponse("");
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-assistant", {
-        body: { prompt },
+        body: { prompt: text },
       });
 
       if (error) throw error;
-      setResponse(data.response);
+      setMessages([...newMessages, { role: "assistant", content: data.response }]);
     } catch (error: any) {
-      toast.error("Failed to get AI response");
-      console.error(error);
+      toast.error("AI antwortet gerade nicht");
+      setMessages([...newMessages, { role: "assistant", content: "⚠️ Verbindung fehlgeschlagen. Bitte versuche es erneut." }]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
   return (
@@ -38,67 +64,92 @@ export default function AIChat() {
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg bg-gradient-purple flex items-center justify-center shadow-purple">
-            <Sparkles className="w-6 h-6 text-white" />
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
             <CardTitle className="text-foreground">AI Assistant</CardTitle>
-            <CardDescription>Powered by Lovable AI - Your strategic advisor</CardDescription>
+            <CardDescription>Dein strategischer Berater</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Ask about rewards optimization, affiliate strategies, or market insights..."
-              className="min-h-[120px] bg-muted border-border resize-none"
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-2">
+          {quickActions.map((action) => (
+            <Button
+              key={action.label}
+              size="sm"
+              variant="outline"
+              onClick={() => sendMessage(action.prompt)}
               disabled={loading}
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={loading || !prompt.trim()}
-            className="w-full bg-gradient-purple hover:opacity-90 shadow-purple text-white"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Thinking...
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4 mr-2" />
-                Send Message
-              </>
-            )}
-          </Button>
-        </form>
+              className="text-xs border-secondary/30 hover:bg-secondary/20 text-muted-foreground hover:text-foreground"
+            >
+              {action.label}
+            </Button>
+          ))}
+        </div>
 
-        {response && (
-          <div className="mt-6 p-4 bg-gradient-dark rounded-lg border border-secondary/20">
-            <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-secondary flex-shrink-0 mt-1" />
-              <div className="flex-1">
-                <h4 className="text-sm font-medium text-secondary mb-2">AI Response</h4>
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {response}
-                </p>
+        {/* Messages */}
+        <div ref={scrollRef} className="h-[300px] overflow-y-auto space-y-3 pr-2">
+          {messages.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <Sparkles className="w-10 h-10 mx-auto mb-3 text-secondary/50" />
+              <p className="text-sm font-medium text-foreground mb-2">Black Sultan AI aktiv</p>
+              <p className="text-xs text-muted-foreground">Frag nach Strategien, Optimierung oder Business-Insights</p>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex gap-2 animate-fade-in ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+              {msg.role === "assistant" && (
+                <div className="w-7 h-7 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <Bot className="w-4 h-4 text-secondary" />
+                </div>
+              )}
+              <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                msg.role === "user"
+                  ? "bg-primary/20 text-foreground border border-primary/30"
+                  : "bg-muted text-foreground border border-border"
+              }`}>
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              </div>
+              {msg.role === "user" && (
+                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+              )}
+            </div>
+          ))}
+
+          {loading && (
+            <div className="flex gap-2 items-start animate-fade-in">
+              <div className="w-7 h-7 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-secondary" />
+              </div>
+              <div className="bg-muted rounded-lg px-4 py-3 border border-border">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-secondary/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-secondary/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-secondary/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {!response && !loading && (
-          <div className="text-center py-8">
-            <Sparkles className="w-10 h-10 mx-auto mb-3 text-secondary/50" />
-            <p className="text-sm font-medium text-foreground mb-2">Elite AI Assistant Active</p>
-            <p className="text-xs text-muted-foreground">
-              Ask about growth strategies, reward optimization, or business insights
-            </p>
-          </div>
-        )}
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Nachricht eingeben..."
+            className="bg-muted border-border"
+            disabled={loading}
+          />
+          <Button type="submit" disabled={loading || !input.trim()} size="icon" className="bg-gradient-purple hover:opacity-90 text-primary-foreground">
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );
